@@ -30,12 +30,17 @@ class Program {
 
     static InputThread input;
     static VK_KEY[] keymap = [VK_KEY.A, VK_KEY.D, VK_KEY.Space, VK_KEY.Escape];
+
+    static bool isrunning = false;
     //methods
     static void Init() {
 
         Raylib.SetTraceLogLevel(TraceLogLevel.Info);
         Raylib.SetWindowState(ConfigFlags.ResizableWindow);
         Raylib.InitWindow(800, 600, "test");
+        Raylib.DisableEventWaiting();
+        Raylib.MaximizeWindow();
+        isrunning = true;
         Raylib.SetTargetFPS(targetFPS);
 
         input = new InputThread(500);
@@ -58,6 +63,11 @@ class Program {
 
 
     static void Update(double dt) {
+
+        if (input.IsPressed[VK_KEY.Escape]) {
+            isrunning = false;
+        }
+
         playercam.Offset = new Vector2(Raylib.GetScreenWidth() / 2, Raylib.GetScreenHeight() / 2);
 
         playercam.Target = playertarget;
@@ -183,7 +193,8 @@ class Program {
     static float LastFrameTime = 0;
     static void Main(string[] args) {
         Init();
-        while (!Raylib.WindowShouldClose()) {
+        //while (!Raylib.WindowShouldClose()) {
+        while (isrunning) {
             LastFrameTime = Raylib.GetFrameTime();
             Update(LastFrameTime);
             Raylib.BeginDrawing();
