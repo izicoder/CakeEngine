@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Raylib_cs;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -29,5 +30,22 @@ static class Util {
 
     public static double ms2s(double ms) {
         return ms / 1000;
+    }
+}
+
+class TextDrawer {
+    private Font _font;
+    private int _fontSize;
+    private float _spacing;
+    private Color _color;
+    public TextDrawer(Font font, int fontSize, float spacing, Color color) {
+        _font = font;
+        _fontSize = fontSize;
+        _spacing = spacing;
+        _color = color;
+    }
+
+    public void Print(string message, int row) {
+        Raylib.DrawTextEx(_font, message, Util.txrow(row, _fontSize), _fontSize, _spacing, _color);
     }
 }

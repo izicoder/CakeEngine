@@ -26,15 +26,20 @@ class Program {
 
     static Rectangle floorrect = new(-1000, (int) ((Raylib.GetScreenHeight() / 4) * 3), new Vector2(10000, 50));
 
+    static TextDrawer tx;
+
+    static InputThread input;
+    static VK_KEY[] keymap = [VK_KEY.A, VK_KEY.D, VK_KEY.Space, VK_KEY.Escape];
     //methods
     static void Init() {
 
         Raylib.SetTraceLogLevel(TraceLogLevel.Info);
         Raylib.SetWindowState(ConfigFlags.ResizableWindow);
-        Raylib.InitWindow(Raylib.GetScreenWidth(), Raylib.GetScreenHeight(), "test");
-        Raylib.MaximizeWindow();
+        Raylib.InitWindow(800, 600, "test");
         Raylib.SetTargetFPS(targetFPS);
 
+        input = new InputThread(500);
+        input.Start(keymap);
 
         var tempimg = Raylib.LoadImage("assets/scary.jpg");
         Raylib.ImageResize(ref tempimg, (int) playerrect.Width, (int) playerrect.Height);
@@ -48,11 +53,13 @@ class Program {
         var codepoints = Util.GetCodepoints();
         mainFont = Raylib.LoadFontEx("assets/consola.ttf", fontSize, codepoints, codepoints.Length);
         Raylib.SetTextureFilter(mainFont.Texture, TextureFilter.Point);
+        tx = new(mainFont, fontSize, spacing, Color.White);
     }
 
 
-
     static void Update(double dt) {
+        playercam.Offset = new Vector2(Raylib.GetScreenWidth() / 2, Raylib.GetScreenHeight() / 2);
+
         playercam.Target = playertarget;
         if (playercam.Zoom < 0)
             playercam.Zoom = 0.1f;
@@ -101,10 +108,10 @@ class Program {
         }
 
 
-        if (Raylib.IsKeyDown(KeyboardKey.A)) {
+        if (input.IsPressed[VK_KEY.A]) {
             playerrect.X -= 10;
         }
-        if (Raylib.IsKeyDown(KeyboardKey.D)) {
+        if (input.IsPressed[VK_KEY.D]) {
             playerrect.X += 10;
         }
         if (Raylib.IsKeyPressed(KeyboardKey.Space)) {
@@ -135,6 +142,7 @@ class Program {
         }
     }
 
+
     static unsafe void Render(double dt) {
         Raylib.ClearBackground(Color.Black);
 
@@ -157,9 +165,18 @@ class Program {
         //end 2d camera
         Raylib.EndMode2D();
 
-        Raylib.DrawTextEx(mainFont, $"fps (target/real/delta): {targetFPS}/{Raylib.GetFPS()}/{dt:f4}", Util.txrow(0, fontSize), fontSize, spacing, fontColor);
-        Raylib.DrawTextEx(mainFont, $"pixels: {points.Count}", Util.txrow(1, fontSize), fontSize, spacing, fontColor);
-        Raylib.DrawTextEx(mainFont, $"zoom: {playercam.Zoom}", Util.txrow(2, fontSize), fontSize, spacing, fontColor);
+        tx.Print($"fps (target/real/delta): {targetFPS}/{Raylib.GetFPS()}/{dt:f4}", 0);
+        tx.Print($"pixels: {points.Count}", 1);
+        tx.Print($"zoom: {playercam.Zoom}", 2);
+        string kb = "";
+        foreach (var k in keymap) {
+            kb += $"{k}:{(input.IsPressed[k] ? 1 : 0)} ";
+        }
+        tx.Print($"keys: {kb}", 4);
+        tx.Print($"input queue: {input.IsPressed.Count}", 5);
+        tx.Print($"raw mouse x/y: {input.MouseX}/{input.MouseY}", 6);
+        tx.Print($"ray mouse x/y: {Raylib.GetMousePosition()}", 7);
+        tx.Print($"main thread id: {Thread.CurrentThread.ManagedThreadId}", 8);
 
     }
 
@@ -173,6 +190,7 @@ class Program {
             Render(LastFrameTime);
             Raylib.EndDrawing();
         }
+        input.Stop();
         Raylib.CloseWindow();
     }
 }
