@@ -307,9 +307,7 @@ static unsafe partial class User32 {
     private static POINT TempMousePoint = new();
     private static Vector2 MousePosition = Vector2.Zero;
     public static Vector2 GetMousePosition() {
-        GetCursorPos(out TempMousePoint);
-        MousePosition.X = TempMousePoint.X;
-        MousePosition.Y = TempMousePoint.Y;
+        (MousePosition.X, MousePosition.Y) = GetMousePositionRaw();
         return MousePosition;
     }
     public static (int, int) GetMousePositionRaw() {
