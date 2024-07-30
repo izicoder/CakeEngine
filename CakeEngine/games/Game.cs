@@ -4,12 +4,21 @@ using System.Numerics;
 
 namespace CakeEngine;
 
-class Game : ICakeGame {
+class Game : IGame {
     #region vars
     Font mainFont;
 
     int monitorID = 0;
     int monitorHZ => Raylib.GetMonitorRefreshRate(monitorID);
+
+    public string InititalTitle => "test game";
+
+    public Vector2 InitialWindowSize => new Vector2(1280, 720);
+
+    public bool IsRunning {
+        get => !Raylib.WindowShouldClose();
+    }
+
     int targetFPS;
 
     int fontSize = 18;
@@ -32,12 +41,15 @@ class Game : ICakeGame {
     #endregion vars
 
     //methods
-    public void Init() {
-
+    public void PreWindow() {
         Raylib.SetTraceLogLevel(TraceLogLevel.Info);
         Raylib.SetWindowState(ConfigFlags.ResizableWindow);
-        Raylib.InitWindow(800, 600, "test");
-        Raylib.DisableEventWaiting();
+    }
+
+    public void Close() {
+
+    }
+    public void Init() {
         Raylib.MaximizeWindow();
         targetFPS = monitorHZ;
         Raylib.SetTargetFPS(targetFPS);
@@ -151,8 +163,9 @@ class Game : ICakeGame {
         }
     }
 
-
+    int FrameCounter = 0;
     public void Render(double dt) {
+        Raylib.BeginDrawing();
         Raylib.ClearBackground(Color.Black);
 
         Raylib.BeginMode2D(playercam);
@@ -182,24 +195,7 @@ class Game : ICakeGame {
         tx.Print(4, $"cam target: {playercam.Target}");
         tx.Print(5, $"current frame: {player.Sprite.CurrentFrame}");
         tx.Print(6, $"fc: {FrameCounter}");
-    }
-
-    uint FrameCounter = 0;
-    public void Run(string[] args) {
-        Init();
-        float delta;
-        while (!Raylib.WindowShouldClose()) {
-            delta = Raylib.GetFrameTime();
-
-            Update(delta);
-
-            Raylib.BeginDrawing();
-
-            Render(delta);
-
-            Raylib.EndDrawing();
-            FrameCounter++;
-        }
-        Raylib.CloseWindow();
+        Raylib.EndDrawing();
+        FrameCounter++;
     }
 }
