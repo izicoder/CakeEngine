@@ -14,15 +14,18 @@ internal class DummyGame : IGame {
 
     TextureRegistry texReg;
 
-    public Vector2 playerPos = Vector2.Zero;
-    public int playerSpeed = 3;
-    public Vector2 aimVec = Vector2.Zero;
+    Input input = new Input();
+
+    Vector2 playerPos = Vector2.Zero;
+    int playerSpeed = 3;
+    Vector2 aimVec = Vector2.Zero;
 
     public void PreWindow() {
         Raylib.SetWindowState(ConfigFlags.ResizableWindow);
     }
 
     public void Init() {
+        input.GamepadStickDeadzone = 0f;
         Console.WriteLine(Directory.GetCurrentDirectory());
         Raylib.MaximizeWindow();
         texReg = new TextureRegistry();
@@ -50,7 +53,7 @@ internal class DummyGame : IGame {
         }
         Raylib.EndMode2D();
         {
-
+            Raylib.DrawFPS(5, 5);
         }
         Raylib.EndDrawing();
     }
@@ -59,34 +62,44 @@ internal class DummyGame : IGame {
         cam.Offset = new Vector2(Raylib.GetRenderWidth() / 2, Raylib.GetRenderHeight() / 2);
         cam.Target = playerPos;
 
-        if (Raylib.IsMouseButtonPressed(MouseButton.Middle)) {
+        if (input.MouseButtonJustPressed(MouseButton.Middle)) {
             cam.Zoom = 2f;
         }
 
-        if (Raylib.IsKeyDown(KeyboardKey.W)) {
+        if (input.IsKeyDown(KeyboardKey.W)) {
             playerPos.Y -= playerSpeed;
         }
-        if (Raylib.IsKeyDown(KeyboardKey.S)) {
+        if (input.IsKeyDown(KeyboardKey.S)) {
             playerPos.Y += playerSpeed;
         }
-        if (Raylib.IsKeyDown(KeyboardKey.A)) {
+        if (input.IsKeyDown(KeyboardKey.A)) {
             playerPos.X -= playerSpeed;
         }
-        if (Raylib.IsKeyDown(KeyboardKey.D)) {
+        if (input.IsKeyDown(KeyboardKey.D)) {
             playerPos.X += playerSpeed;
         }
 
-        if (Raylib.IsGamepadAvailable(0)) {
+        if (input.GamepadAvailable) {
             var leftx = Raylib.GetGamepadAxisMovement(0, GamepadAxis.LeftX);
             var lefty = Raylib.GetGamepadAxisMovement(0, GamepadAxis.LeftY);
             var rightx = Raylib.GetGamepadAxisMovement(0, GamepadAxis.RightX);
             var righty = Raylib.GetGamepadAxisMovement(0, GamepadAxis.RightY);
-            var gprightaxis = new Vector2(rightx, righty);
-            aimVec = gprightaxis * 100;
+            var rightstick = input.RightStick();
+
+            Console.WriteLine($"rstick: {rightstick}");
+            aimVec = rightstick * 100;
             aimVec = aimVec + playerPos;
-            var gpleftaxis = new Vector2(leftx, lefty);
-            var trig = Raylib.GetGamepadAxisMovement(0, GamepadAxis.LeftTrigger);
-            playerPos += gpleftaxis * playerSpeed * (trig > 0 ? Raymath.Remap(trig, 0, 1, 1, 2) : 1);
+            var leftstick = input.LeftStick();
+
+            var trig = input.LeftTrigger();
+            playerPos += leftstick * playerSpeed * (trig > 0 ? Raymath.Remap(trig, 0, 1, 1, 2) : 1);
+        } else {
+            var mousevec = input.MouseWorldPosition(cam);
+            mousevec = new Vector2(mousevec.X - playerPos.X, mousevec.Y - playerPos.Y);
+            var clamped = Raymath.Vector2ClampValue(mousevec, -1, 1);
+            Console.WriteLine($"clamped: {clamped} real: {mousevec}");
+            aimVec = clamped * 100;
+            aimVec = aimVec + playerPos;
         }
 
         float wheel = Raylib.GetMouseWheelMove();
