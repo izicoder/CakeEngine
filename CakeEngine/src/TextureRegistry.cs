@@ -39,6 +39,12 @@ class TextureRegistry {
         }
     }
 
+    public void Add(string name, string imagepath) {
+        var imgsize = Raylib.LoadImage(imagepath);
+        var texinfo = new TextureInfo(imagepath, new Vector2(imgsize.Width, imgsize.Height));
+        _availableTextures[name] = texinfo;
+    }
+
     public void Load(string name) {
         if (_availableTextures.ContainsKey(name)) {
             var entry = _availableTextures[name];
