@@ -77,7 +77,7 @@ internal class DummyGame : IGame {
         Raylib.EndMode2D();
         {
             tx.Print(0, $"fps: {Raylib.GetFPS()}");
-            tx.Print(1, $"volume {channelVolume}");
+            tx.Print(1, $"volume: {channelVolume}");
             tx.Print(2, $"playing: {isPlaying}");
             tx.Print(3, $"channels: {numchannels}");
             tx.Print(4, $"pan: {channelPan}");
