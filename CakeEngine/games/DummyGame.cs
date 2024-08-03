@@ -24,12 +24,7 @@ internal class DummyGame : IGame {
     FMOD.Sound song;
     FMOD.Channel channel;
     FMOD.ChannelGroup channelgroup;
-    FMOD.Studio.System fmodstudio;
-    FMOD.Studio.Bank masterbank;
-    FMOD.Studio.Bank masterstringbank;
     FMOD.RESULT fmodres;
-    FMOD.Studio.EventDescription hurt_desc;
-    FMOD.Studio.EventInstance hurt;
 
     float channelVolume;
     float channelPan = 0;
@@ -61,30 +56,13 @@ internal class DummyGame : IGame {
         Raylib.SetTargetFPS(Raylib.GetMonitorRefreshRate(0));
 
 
-        fmodres = FMOD.Studio.System.create(out fmodstudio);
-        logRes("create");
-        fmodres = fmodstudio.initialize(512, FMOD.Studio.INITFLAGS.NORMAL | FMOD.Studio.INITFLAGS.LIVEUPDATE, FMOD.INITFLAGS.NORMAL | FMOD.INITFLAGS.PROFILE_ENABLE, 0);
-        logRes("init");
-        fmodres = fmodstudio.getCoreSystem(out fmod);
-        logRes("get sys");
-        //FMOD.Factory.System_Create(out fmod);
-        //var initstatus = fmod.init(100, FMOD.INITFLAGS.PROFILE_ENABLE | FMOD.INITFLAGS.NORMAL, IntPtr.Zero);
-        //Console.WriteLine(initstatus);
+        FMOD.Factory.System_Create(out fmod);
+        fmodres = fmod.init(100, FMOD.INITFLAGS.PROFILE_ENABLE | FMOD.INITFLAGS.NORMAL, IntPtr.Zero);
+        logRes("sys init");
 
-        //fmod.createChannelGroup("master", out channelgroup);
-        //fmod.createSound("assets/deco.mp3", FMOD.MODE.LOOP_NORMAL, out song);
-        fmodres = fmodstudio.loadBankFile("assets/Master.bank", FMOD.Studio.LOAD_BANK_FLAGS.NORMAL, out masterbank);
-        logRes("load master");
-        fmodres = fmodstudio.loadBankFile("assets/Master.strings.bank", FMOD.Studio.LOAD_BANK_FLAGS.NORMAL, out masterstringbank);
-        logRes("load master string");
-        int bankcount;
-        fmodres = fmodstudio.getBankCount(out bankcount);
-        logRes("bank count");
-        Console.WriteLine($"bc: {bankcount}");
-        fmodres = fmodstudio.getEvent("event:/hurt", out hurt_desc);
-        logRes("hurt desc");
-        fmodres = hurt_desc.createInstance(out hurt);
-        logRes("hurt instance");
+        fmod.createChannelGroup("master", out channelgroup);
+        fmod.createSound("assets/deco.mp3", FMOD.MODE._3D_LINEARROLLOFF, out song);
+        channelgroup.setVolume(0.5f);
 
         tx = new TextDrawer(Raylib.GetFontDefault(), 22, 1.2f, Color.White);
     }
@@ -116,11 +94,11 @@ internal class DummyGame : IGame {
     }
 
     public void Update(double dt) {
-        //fmod.update();
-        fmodstudio.update();
+        fmod.update();
         fmod.getChannelsPlaying(out numchannels);
-        //channelgroup.getVolume(out channelVolume);
-        //channelgroup.getNumChannels(out numchannels);
+        channelgroup.getVolume(out channelVolume);
+        channelgroup.getNumChannels(out numchannels);
+
 
         for (int i = 0; i < numchannels; i++) {
             FMOD.Channel ch;
@@ -138,7 +116,13 @@ internal class DummyGame : IGame {
             isPlaying = true;
         }
         if (input.KeyJustPressed(KeyboardKey.Space)) {
-            hurt.start();
+            if (isPlaying) {
+                channelgroup.setPaused(true);
+                isPlaying = false;
+            } else {
+                channelgroup.setPaused(false);
+                isPlaying = true;
+            }
         }
         if (input.KeyJustPressed(KeyboardKey.Up)) {
             channelVolume += 0.1f;
@@ -206,7 +190,8 @@ internal class DummyGame : IGame {
     }
 
     public void Close() {
-        fmodres = fmodstudio.release();
+        fmodres = fmod.close();
         logRes("end");
+        fmod.release();
     }
 }

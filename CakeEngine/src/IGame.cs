@@ -1,6 +1,6 @@
 ﻿using System.Numerics;
 
-namespace CakeEngine.games;
+namespace CakeEngine;
 interface IGame {
     string InititalTitle {
         get;
